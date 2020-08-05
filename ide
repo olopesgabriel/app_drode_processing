@@ -1,0 +1,150 @@
+//sudo chmod a+rw /dev/ttyACM0 (para liberar porta serial arduino)
+import processing.video.*;
+import processing.serial.*;
+import java.awt.event.KeyEvent;
+import java.io.IOException;
+  
+PImage img;
+PFont p;
+String data="";
+float roll, pitch,yaw;
+
+Serial myPort;
+Capture video;
+
+ferr f;
+mod m;
+dat d;
+came e;
+
+void setup(){
+  fullScreen(P3D);
+
+  f = new ferr();
+  m = new mod();
+  d = new dat();
+  e = new came();
+  p = createFont("Azonix", 50);
+  img = loadImage("logoapp.png");
+  video = new Capture(this, 640, 480, 10);
+  beginCamera();
+  
+}
+
+void draw(){
+    background(100);
+    f.Ferramentas();
+    m.Modelo();
+    d.Data();
+    e.Camera();
+    
+    img.resize(25, 25);
+    image(img, 5, 2);
+    
+    cubos();
+    rotacaodrone();
+    camera();
+   
+    endCamera();
+}
+
+class ferr {  
+  //estrutura barra de ferramentas
+  void Ferramentas(){
+    textFont(p);
+    fill(71, 74, 81);
+    stroke(0);
+    quad(0,0, width,0, width,30, 0,30);
+  }
+}
+
+class mod {
+  //estrutura modelo 3d
+  void Modelo(){
+    fill(71, 74, 81);
+    quad(4,35, 480,35, 480,475, 4,475);
+    fill(255);
+    textSize(40);
+    text("3D Model", width/11, height/3);
+    textSize(15);
+    text("Aguardando conexão", width/10, height/2.7);
+   
+  }
+}
+
+class dat {
+  //estrutura dados do drone
+  void Data(){
+    fill(71, 74, 81);
+    quad(4,480, 480,480, 480,height-4, 4,height-4);
+    fill(255);
+    textSize(40);
+    text("Data", width/8, height-150);
+    textSize(15);
+    text("Aguardando conexão", width/10, height-120);
+  }
+}
+
+class came {
+  // estrutura camera
+  void Camera(){
+    fill(71, 74, 81);
+    quad(485,35, width-4,35, width-4,height-4, 485,height-4);
+    fill(255);
+    textSize(50);
+    text("Camera", width-570, height/2);
+    textSize(15);
+    text("Aguardando conexão com drone", width-605, 415);
+     if (video.available()) {
+      video.read();
+      video.loadPixels();
+     }
+  }
+  
+}
+
+void cubos(){
+  //animação cubo
+    translate(width/2, height/2);
+ 
+    pushMatrix();
+    translate(220, 80, 40);
+    rotateX(frameCount*PI/200);
+    rotateY(frameCount*PI/300);
+    stroke(255);
+    noFill();
+    box(40,40,40);
+    popMatrix();
+  
+    pushMatrix();
+    translate(220, 80, 40);
+    rotateX(frameCount*PI/-200);
+    rotateY(frameCount*PI/200);
+    stroke(255);
+    noFill();
+    box(20,20,20);
+    popMatrix();   
+}
+
+void serialEvent (Serial myPort) { 
+  
+  myPort = new Serial(this, "/dev/ttyACM0", 9600);
+  myPort.bufferUntil('A');
+  
+  data = myPort.readStringUntil('A');
+  if (data != null) {
+    data = trim(data);
+    String items[] = split(data, '/');
+    if (items.length > 1) {
+      roll = float(items[0]);
+      pitch = float(items[1]);
+      yaw = float(items[2]);
+    }
+  }
+}
+
+void rotacaodrone(){
+    rotateX(radians(-pitch));
+    rotateZ(radians(roll));
+    rotateY(radians(yaw));
+}
